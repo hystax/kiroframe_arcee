@@ -27,20 +27,20 @@ class Dataset(object):
                  '_tasks', '_files', '_version')
 
     def __init__(self, key: str, name: str = None, description: str = None,
-                 labels: list[str] = [], meta: dict = {},
+                 labels: list[str] = None, meta: dict = None,
                  timespan_from: int = None, timespan_to: int = None,
-                 aliases: list[str] = []):
+                 aliases: list[str] = None):
         self._tasks: list = []
         self._files: dict = {}
         self._version: int = None
         self.key: str = key
         self.name: str = name
         self.description: str = description
-        self.labels: list[str] = labels
-        self.meta: dict = meta
+        self.labels: list[str] = labels or []
+        self.meta: dict = meta or {}
         self.timespan_from: int = timespan_from
         self.timespan_to: int = timespan_to
-        self.aliases: list[str] = aliases
+        self.aliases: list[str] = aliases or []
 
     @classmethod
     def from_response(cls, response):
