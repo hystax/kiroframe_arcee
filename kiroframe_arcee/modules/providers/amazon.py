@@ -29,8 +29,8 @@ async def download(path, digest, dest_path, file_name):
         etag = await s3_object.e_tag
         if etag.strip('"') != digest:
             raise ValueError(
-                'Cannot download dataset file %s. Source file has been changed' %
-                path)
+                'Cannot download dataset file %s. Source file has been '
+                'changed' % path)
         os.makedirs(dest_path, exist_ok=True)
         async with aiofiles.open(dest_path + file_name, 'wb') as fp:
             await s3_object.download_fileobj(fp)
