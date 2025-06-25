@@ -1,6 +1,7 @@
 import os
 import asyncio
 import threading
+from typing import List, Dict
 from kiroframe_arcee.modules.providers import local_file, amazon
 
 LOCAL_PREFIX = 'file://'
@@ -27,20 +28,20 @@ class Dataset(object):
                  '_tasks', '_files', '_version')
 
     def __init__(self, key: str, name: str = None, description: str = None,
-                 labels: list[str] = None, meta: dict = None,
+                 labels: List[str] = None, meta: Dict = None,
                  timespan_from: int = None, timespan_to: int = None,
-                 aliases: list[str] = None):
-        self._tasks: list = []
-        self._files: dict = {}
+                 aliases: List[str] = None):
+        self._tasks: List = []
+        self._files: Dict = {}
         self._version: int = None
         self.key: str = key
         self.name: str = name
         self.description: str = description
-        self.labels: list[str] = labels or []
-        self.meta: dict = meta or {}
+        self.labels: List[str] = labels or []
+        self.meta: Dict = meta or {}
         self.timespan_from: int = timespan_from
         self.timespan_to: int = timespan_to
-        self.aliases: list[str] = aliases or []
+        self.aliases: List[str] = aliases or []
 
     @classmethod
     def from_response(cls, response):
