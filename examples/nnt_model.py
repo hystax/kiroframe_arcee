@@ -10,10 +10,8 @@ import kiroframe_arcee as arcee
 def main():
     # init arcee
     with arcee.init(
-        "2f4fda2d-755a-45a1-95d9-d9406606af1e",
+        "YOU-PROFILING_TOKEN",
         task_key="test_task",
-        endpoint_url="https://10.10.10.10:443/arcee/v2",
-        ssl=False,
     ):
         arcee.tag("project", "nnt_model demo")
         arcee.tag("model_type", "trivial")
