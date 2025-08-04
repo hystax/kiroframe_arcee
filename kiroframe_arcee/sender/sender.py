@@ -117,6 +117,9 @@ class Sender:
     async def send_stats(self, token, data):
         headers = {"x-api-key": token, "Content-Type": "application/json"}
         meta = await self.m()
+        for k in data["data"]:
+            if isinstance(k, str) and k.endswith("*"):
+                raise ValueError("* is not allowed in metric names")
         data.update({"platform": meta.to_dict()})
         await self.send_post_request(
             "%s/%s" % (self.endpoint_url, "collect"), headers, data
