@@ -119,7 +119,7 @@ class Sender:
         meta = await self.m()
         for k in data["data"]:
             if isinstance(k, str) and k.endswith("*"):
-                raise ValueError("* is not allowed in metric names")
+                raise ValueError("* is not allowed in metric keys")
         data.update({"platform": meta.to_dict()})
         await self.send_post_request(
             "%s/%s" % (self.endpoint_url, "collect"), headers, data
