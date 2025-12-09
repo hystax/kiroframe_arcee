@@ -25,7 +25,7 @@ class DatasetThread(threading.Thread):
 class Dataset(object):
     __slots__ = ('key', 'name', 'description', 'labels', 'meta',
                  'timespan_from', 'timespan_to', 'aliases',
-                 '_tasks', '_files', '_version')
+                 '_tasks', '_files', '_version', '_arcee')
 
     def __init__(self, key: str, name: str = None, description: str = None,
                  labels: List[str] = None, meta: Dict = None,
@@ -34,6 +34,7 @@ class Dataset(object):
         self._tasks: List = []
         self._files: Dict = {}
         self._version: int = None
+        self._arcee = None
         self.key: str = key
         self.name: str = name
         self.description: str = description
@@ -53,12 +54,17 @@ class Dataset(object):
         })
         obj._version = version['version']
         if files:
-            obj._files = {f['path']: {
-                'path': f['path'],
-                'size': f['size'],
-                'digest': f['digest']
-            } for f in files}
+            obj.replace_files(files)
         return obj
+
+    def replace_files(self, files):
+        self._files = {f['path']: {
+            '_id': f['_id'],
+            'path': f['path'],
+            'size': f['size'],
+            'digest': f['digest'],
+            'meta': f.get('meta', {}),
+        } for f in files}
 
     @property
     def __dict__(self):
@@ -69,7 +75,15 @@ class Dataset(object):
             value = getattr(self, k)
             if value:
                 res[k] = getattr(self, k)
-        res['files'] = list(self._files.values())
+        files = []
+        for f in self._files.values():
+            files.append({
+                'path': f['path'],
+                'size': f['size'],
+                'digest': f['digest'],
+                'meta': f.get('meta', {}),
+            })
+        res['files'] = files
         return res
 
     def _get_provider(self, path):
@@ -82,11 +96,12 @@ class Dataset(object):
 
     def _add_file(self, path):
         provider, local_path = self._get_provider(path)
-        digest, size = asyncio.run(provider.get_file_info(local_path))
+        digest, size, meta = asyncio.run(provider.get_file_info(local_path))
         self._files[path] = {
             'path': path,
             'size': size,
-            'digest': digest
+            'digest': digest,
+            'meta': meta
         }
 
     def add_file(self, path):
@@ -138,3 +153,18 @@ class Dataset(object):
                 local_path, digest, destination, file_name
             )
         )
+        meta = file.get('meta')
+        file_id = file.get('_id')
+        if self._arcee and file_id and not meta:
+            try:
+                path = destination + file_name
+                meta = asyncio.run(local_file.get_file_meta(path))
+                if meta:
+                    file_dict = asyncio.run(
+                        self._arcee.sender.update_file_meta(
+                            file_id, self._arcee.token, meta=meta
+                        )
+                    )
+                    file['meta'] = file_dict['meta']
+            except Exception:
+                pass

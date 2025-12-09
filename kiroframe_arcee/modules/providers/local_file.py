@@ -4,6 +4,10 @@ import hashlib
 import shutil
 import mmap
 import aiofiles
+import asyncio
+import csv
+from pathlib import Path
+import pyarrow.parquet as pq
 
 _KB: int = 1_024
 _CHUNKSIZE: int = 128 * _KB
@@ -12,7 +16,11 @@ _CHUNKSIZE: int = 128 * _KB
 async def get_file_info(path):
     digest = await _get_md5(path)
     size = await _get_size(path)
-    return digest, size
+    try:
+        meta = await get_file_meta(path)
+    except Exception:
+        meta = {}
+    return digest, size, meta
 
 
 async def _get_md5(path):
@@ -26,10 +34,10 @@ async def _get_md5(path):
                            access=mmap.ACCESS_READ) as mview:
                 md_5_hash.update(mview)
         except OSError:
-            chunk = f.read(_CHUNKSIZE)
+            chunk = await f.read(_CHUNKSIZE)
             while chunk:
                 md_5_hash.update(chunk)
-                chunk = f.read(_CHUNKSIZE)
+                chunk = await f.read(_CHUNKSIZE)
         except ValueError:
             pass
     return md_5_hash.hexdigest()
@@ -50,3 +58,24 @@ async def download(path, digest, dest_path, file_name):
             path)
     os.makedirs(dest_path, exist_ok=True)
     shutil.copy(path, dest_path + file_name)
+
+
+async def get_file_meta(path):
+    path = Path(path)
+    suffix = path.suffix.lower()
+    if suffix == ".csv":
+        async with aiofiles.open(path, "r", encoding="utf-8",
+                                 newline="") as f:
+            header_line = await f.readline()
+            headers = next(csv.reader([header_line]))
+        return {"format": "csv", "headers": headers}
+    elif suffix == ".parquet":
+        # PyArrow is synchronous and blocks the event loop. Run in a thread
+        def read_parquet():
+            table = pq.read_table(path, columns=[])
+            return table.schema.names, table.num_rows
+
+        headers, row_count = await asyncio.to_thread(read_parquet)
+        return {"format": "parquet", "headers": headers, "rows": row_count}
+    else:
+        raise ValueError(f"Unsupported file format: {suffix}")

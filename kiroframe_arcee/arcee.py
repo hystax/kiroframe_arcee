@@ -226,6 +226,8 @@ def log_dataset(dataset: Dataset, comment: str = None):
             body=dataset.__dict__, comment=comment
         ))
         dataset._version = dataset_dict["version"]["version"]
+        dataset.replace_files(dataset_dict["version"].get('files'))
+        dataset._arcee = arcee
 
 
 def use_dataset(dataset: str, comment: str = None) -> Dataset:
@@ -239,7 +241,9 @@ def use_dataset(dataset: str, comment: str = None) -> Dataset:
     arcee = Arcee()
     dataset_dict = asyncio.run(arcee.sender.use_dataset(
         arcee.token, arcee.run, dataset, comment=comment))
-    return Dataset.from_response(dataset_dict)
+    dataset = Dataset.from_response(dataset_dict)
+    dataset._arcee = arcee
+    return dataset
 
 
 def _send_console():

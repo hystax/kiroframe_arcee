@@ -235,3 +235,11 @@ class Sender:
         uri = f'{self.endpoint_url}/artifacts/{artifact["id"]}'
         await self.send_patch_request(uri, headers, body)
         return artifact["id"], path, artifact['tags']
+
+    @check_shutdown_flag_set
+    async def update_file_meta(self, file_id, token, meta):
+        uri = "%s/file/%s" % (self.endpoint_url, file_id)
+        headers = {"x-api-key": token, "Content-Type": "application/json"}
+        return await self.send_patch_request(
+            uri, headers, {"meta": meta}
+        )

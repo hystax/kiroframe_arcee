@@ -2,16 +2,23 @@ import os
 import aioboto3
 import aiofiles
 from urllib.parse import urlparse
+from botocore.exceptions import ClientError
 
 
 async def get_file_info(path):
-    bucket, key = await _parse_uri(path)
-    session = aioboto3.Session()
-    async with session.resource("s3") as s3:
-        res = await s3.Object(bucket, key)
-        etag = await res.e_tag
-        size = await res.content_length
-    return etag.strip('"'), size
+    try:
+        bucket, key = await _parse_uri(path)
+        session = aioboto3.Session()
+        async with session.resource("s3") as s3:
+            res = await s3.Object(bucket, key)
+            etag = await res.e_tag
+            size = await res.content_length
+    except ClientError as exc:
+        err_code = exc.response['Error'].get('Code')
+        if err_code == '404':
+            raise FileNotFoundError(path)
+        raise
+    return etag.strip('"'), size, {}
 
 
 async def _parse_uri(path):
