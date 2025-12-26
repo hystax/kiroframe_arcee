@@ -155,6 +155,28 @@ def getGPUs():
                 display_mode = vals[i]
             elif i == 11:
                 temp_gpu = safeFloatCast(vals[i])
+        if all(math.isnan(mem) for mem in (memTotal, memUsed, memFree)):
+            try:
+                p = Popen(
+                    [
+                        nvidia_smi,
+                        f"-i={deviceIds}"
+                        f"--query-compute-apps=used_memory"
+                        f"--format=csv,noheader,nounits",
+                    ],
+                    stdout=PIPE,
+                )
+                stdout, _ = p.communicate()
+                output = stdout.decode("UTF-8")
+                lines = output.split(os.linesep)
+                mem = 0
+                for line in lines:
+                    if line:
+                        mem += safeFloatCast(line)
+                memUsed = mem
+            except Exception:
+                pass
+
         GPUs.append(
             GPU(
                 deviceIds,
