@@ -235,3 +235,9 @@ class Sender:
         uri = f'{self.endpoint_url}/artifacts/{artifact["id"]}'
         await self.send_patch_request(uri, headers, body)
         return artifact["id"], path, artifact['tags']
+
+    async def send_file_logs(self, token, run_id, logs):
+        headers = {"x-api-key": token, "Content-Type": "application/json"}
+        data = {'file_logs': logs}
+        uri = "%s/run/%s/file_log" % (self.endpoint_url, run_id)
+        return await self.send_post_request(uri, headers, data)
