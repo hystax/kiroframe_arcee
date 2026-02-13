@@ -86,7 +86,7 @@ class Dataset(object):
 
     def _get_provider(self, path):
         if path.startswith(LOCAL_PREFIX):
-            return local_file, path.strip(LOCAL_PREFIX)
+            return local_file, path.removeprefix(LOCAL_PREFIX)
         elif path.startswith(S3_PREFIX):
             return amazon, path
         else:

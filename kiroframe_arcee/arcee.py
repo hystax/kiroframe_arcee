@@ -230,7 +230,7 @@ def log_dataset(dataset: Dataset, comment: str = None):
             body=dataset.__dict__, comment=comment
         ))
         dataset._version = dataset_dict["version"]["version"]
-        dataset.replace_files(dataset_dict['version'].get('files'))
+        dataset.replace_files(dataset_dict['version'].get('files', []))
 
 
 def use_dataset(dataset: str, comment: str = None) -> Dataset:
