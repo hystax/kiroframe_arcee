@@ -196,6 +196,29 @@ arcee.log_dataset(dataset=new_dataset)
 new_dataset.download()
 ```
 
+Dataset changes tracking:
+You can track dataset changes with decorator
+```sh
+@arcee.track_datasets
+```
+specify the function parameters that contain the necessary datasets and leave 
+a comment for these changes.
+```sh
+@arcee.track_datasets('param_2', 'param_3', comment='my comment')
+def test_func(
+    param_1: str, param_2: ArceeDataframe, param_3: ArceeDataframe, param_4: str
+):
+    # Apply changes
+    pass
+
+dataset = arcee.use_dataset('test:latest')
+dataset.download()
+df_1 = dataset.get_dataframe(file_1_path)
+df_2 = dataset.get_dataframe(file_2_path)
+test_func('test', df_1, df_2, 'another_test')
+```
+
+
 ## Creating models
 To create a model, use the `model` method with the following parameters:
 - key (str, required): the unique model key.

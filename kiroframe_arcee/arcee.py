@@ -3,6 +3,9 @@ import atexit
 import time
 import threading
 import warnings
+import inspect
+from collections import defaultdict
+from functools import wraps
 
 from kiroframe_arcee.sender.sender import Sender
 from kiroframe_arcee.collectors.console import (
@@ -10,6 +13,7 @@ from kiroframe_arcee.collectors.console import (
 from kiroframe_arcee.name_generator import NameGenerator
 from kiroframe_arcee.utils import single
 from kiroframe_arcee.modules.dataset import Dataset
+from kiroframe_arcee.modules.dataframe import ArceeDataframe, collect_stats
 
 
 class Job(threading.Thread):
@@ -226,6 +230,7 @@ def log_dataset(dataset: Dataset, comment: str = None):
             body=dataset.__dict__, comment=comment
         ))
         dataset._version = dataset_dict["version"]["version"]
+        dataset.replace_files(dataset_dict['version'].get('files', []))
 
 
 def use_dataset(dataset: str, comment: str = None) -> Dataset:
@@ -366,3 +371,47 @@ def artifact_tag(path, key, value):
             arcee.token, arcee.artifacts, path, key, value
         )
     )
+
+
+def track_datasets(*dataframe_args, comment=None):
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            bound = inspect.signature(func).bind(*args, **kwargs)
+            bound.apply_defaults()
+            parameters = bound.arguments
+            before_stats = {}
+            logs = defaultdict(list)
+            for arg in dataframe_args:
+                df = parameters.get(arg)
+                if df is None:
+                    continue
+                if not isinstance(df, ArceeDataframe):
+                    print('%s should be an ArceeDataframe instance' % arg)
+                    continue
+                before_stats[arg] = collect_stats(df)
+            result = func(*args, **kwargs)
+            ts = time.time()
+            for arg, before in before_stats.items():
+                df = parameters[arg]
+                after = collect_stats(df)
+                stats_info = {}
+                for k, v in before.items():
+                    stats_info[k] = {'before': v, 'after': after[k]}
+                logs[df.file_id].append({
+                    'op': func.__name__,
+                    'params': list(parameters.keys()),
+                    'time': ts,
+                    'stats': stats_info,
+                    'comment': comment
+                })
+            if logs:
+                arcee = Arcee()
+                asyncio.run(
+                    arcee.sender.send_file_logs(
+                        arcee.token, arcee.run, logs
+                    )
+                )
+            return result
+        return wrapper
+    return decorator

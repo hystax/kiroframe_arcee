@@ -3,6 +3,7 @@ import asyncio
 import threading
 from typing import List, Dict
 from kiroframe_arcee.modules.providers import local_file, amazon
+from kiroframe_arcee.modules.dataframe import init_arcee_dataframe
 
 LOCAL_PREFIX = 'file://'
 S3_PREFIX = 's3://'
@@ -53,12 +54,16 @@ class Dataset(object):
         })
         obj._version = version['version']
         if files:
-            obj._files = {f['path']: {
-                'path': f['path'],
-                'size': f['size'],
-                'digest': f['digest']
-            } for f in files}
+            obj.replace_files(files)
         return obj
+
+    def replace_files(self, files):
+        self._files = {f['path']: {
+            '_id': f['_id'],
+            'path': f['path'],
+            'size': f['size'],
+            'digest': f['digest'],
+        } for f in files}
 
     @property
     def __dict__(self):
@@ -69,12 +74,19 @@ class Dataset(object):
             value = getattr(self, k)
             if value:
                 res[k] = getattr(self, k)
-        res['files'] = list(self._files.values())
+        files = []
+        for f in self._files.values():
+            files.append({
+                'path': f['path'],
+                'size': f['size'],
+                'digest': f['digest'],
+            })
+        res['files'] = files
         return res
 
     def _get_provider(self, path):
         if path.startswith(LOCAL_PREFIX):
-            return local_file, path.strip(LOCAL_PREFIX)
+            return local_file, path.removeprefix(LOCAL_PREFIX)
         elif path.startswith(S3_PREFIX):
             return amazon, path
         else:
@@ -108,16 +120,33 @@ class Dataset(object):
             if task.exception:
                 raise task.exception
 
+    def get_dataset_name(self):
+        return f'{self.key}:V{self._version}'
+
+    def _get_file_destination(self, dataset_name=None):
+        if dataset_name is None:
+            dataset_name = self.get_dataset_name()
+        return BASE_PATH % dataset_name
+
+    def _get_file_name(self, path):
+        return path.split('/')[-1]
+
+    def _get_download_path(self, path, destination=None):
+        if not destination:
+            dataset_name = self.get_dataset_name()
+            destination = self._get_file_destination(dataset_name)
+        return destination + self._get_file_name(path)
+
     def download(self, overwrite=True) -> dict:
         download_map = dict()
         if self._version is None:
             raise TypeError('Dataset is not logged')
-        name = f'{self.key}:V{self._version}'
+        name = self.get_dataset_name()
         print('Downloading %s' % name)
         for path, file in self._files.items():
-            destination = BASE_PATH % name
-            file_name = path.split('/')[-1]
-            download_path = destination + file_name
+            destination = self._get_file_destination(dataset_name=name)
+            file_name = self._get_file_name(path)
+            download_path = self._get_download_path(path, destination)
             download_map[path] = download_path
             if not overwrite and os.path.isfile(download_path):
                 continue
@@ -138,3 +167,15 @@ class Dataset(object):
                 local_path, digest, destination, file_name
             )
         )
+
+    def get_dataframe(self, path):
+        if path not in self._files:
+            raise TypeError('The file %s is not part of the dataset' % path)
+        file = self._files.get(path) or {}
+        file_id = file.get('_id')
+        if not file or not file_id:
+            raise TypeError('The file %s is not logged' % path)
+        local_path = self._get_download_path(path)
+        if not os.path.exists(local_path):
+            raise ValueError('File %s is not downloaded' % local_path)
+        return init_arcee_dataframe(file_id, local_path)
