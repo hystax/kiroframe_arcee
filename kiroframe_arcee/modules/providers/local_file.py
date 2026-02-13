@@ -72,8 +72,8 @@ async def get_file_meta(path):
     elif suffix == ".parquet":
         # PyArrow is synchronous and blocks the event loop. Run in a thread
         def read_parquet():
-            table = pq.read_table(path, columns=[])
-            return table.schema.names, table.num_rows
+            metadata = pq.read_metadata(path)
+            return metadata.schema.names, metadata.num_rows
 
         headers, row_count = await asyncio.to_thread(read_parquet)
         return {"format": "parquet", "headers": headers, "rows": row_count}
