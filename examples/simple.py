@@ -1,19 +1,19 @@
-import kiroframe_arcee as arcee
+import kiroframe_arcee as kiro
 
-with arcee.init("test", "simple"):
-    arcee.tag("key", "value")
-    arcee.tag("test1", "test2")
-    arcee.milestone("just a milestone")
-    arcee.model("model_key", "/src/simple.py")
-    arcee.model_version("1.23.45-rc")
-    arcee.model_version_alias("winner")
-    arcee.model_version_tag("key", "value")
-    arcee.send({"t": 2})
-    arcee.artifact(
+with kiro.init("test", "simple"):
+    kiro.tag("key", "value")
+    kiro.tag("test1", "test2")
+    kiro.milestone("just a milestone")
+    kiro.model("model_key", "/src/simple.py")
+    kiro.model_version("1.23.45-rc")
+    kiro.model_version_alias("winner")
+    kiro.model_version_tag("key", "value")
+    kiro.send({"t": 2})
+    kiro.artifact(
         "https://s3/ml-bucket/artifacts/AccuracyChart.png",
         "Accuracy line chart",
         "The dependence of accuracy on the time",
         {"env": "staging"})
-    arcee.artifact_tag("https://s3/ml-bucket/artifacts/AccuracyChart.png",
-                       "key", "value")
-print(arcee.info())
+    kiro.artifact_tag("https://s3/ml-bucket/artifacts/AccuracyChart.png",
+                      "key", "value")
+print(kiro.info())
