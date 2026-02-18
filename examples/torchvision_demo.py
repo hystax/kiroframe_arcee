@@ -4,7 +4,7 @@ from torch.utils.data import DataLoader
 from torchvision import datasets
 from torchvision.transforms import ToTensor
 
-import kiroframe_arcee as arcee
+import kiroframe_arcee as kiro
 
 
 filename = "torchvision.pth"
@@ -48,7 +48,7 @@ def train(dataloader, model, loss_fn, optimizer, epoch):
 
         if batch % 100 == 0:
             loss, current = loss.item(), batch * len(x)
-            arcee.send({"loss": loss, "iter": current, "epoch": epoch})
+            kiro.send({"loss": loss, "iter": current, "epoch": epoch})
             print(f"loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
 
 
@@ -65,7 +65,7 @@ def test(dataloader, model, loss_fn):
             correct += (pred.argmax(1) == y).type(torch.float).sum().item()
     test_loss /= num_batches
     correct /= size
-    arcee.send({"accuracy": 100 * correct})
+    kiro.send({"accuracy": 100 * correct})
     print(
         f"Error: \n Accuracy: {(100 * correct):>0.1f}%,"
         f"Avg loss: {test_loss:>8f} \n"
@@ -73,14 +73,14 @@ def test(dataloader, model, loss_fn):
 
 
 if __name__ == "__main__":
-    # init arcee
-    with arcee.init(token="test", task_key="torchvision"):
-        arcee.model("torchvision", path=filename)
-        arcee.tag("project", "torchvision demo")
+    # init kiro
+    with kiro.init(token="test", task_key="torchvision"):
+        kiro.model("torchvision", path=filename)
+        kiro.tag("project", "torchvision demo")
 
         # Download training data
-        arcee.milestone("Download training data")
-        arcee.stage("Preparing")
+        kiro.milestone("Download training data")
+        kiro.stage("Preparing")
         training_data = datasets.FashionMNIST(
             root="data",
             train=True,
@@ -89,7 +89,7 @@ if __name__ == "__main__":
         )
 
         # Download test data
-        arcee.milestone("Download test data")
+        kiro.milestone("Download test data")
         test_data = datasets.FashionMNIST(
             root="data",
             train=False,
@@ -97,7 +97,7 @@ if __name__ == "__main__":
             transform=ToTensor(),
         )
 
-        arcee.milestone("Create data loaders")
+        kiro.milestone("Create data loaders")
         # Create data loaders
         train_dataloader = DataLoader(training_data, batch_size=batch_size)
         test_dataloader = DataLoader(test_data, batch_size=batch_size)
@@ -110,24 +110,24 @@ if __name__ == "__main__":
         # detect CUDA /  cpu or gpu device for training.
         device = "cuda" if torch.cuda.is_available() else "cpu"
         print(f"Using {device} device")
-        arcee.milestone("Define model")
+        kiro.milestone("Define model")
         model = NeuralNetwork().to(device)
         print(model)
         loss_fn = nn.CrossEntropyLoss()
         optimizer = torch.optim.SGD(model.parameters(), lr=1e-3)
 
         epochs = 5
-        arcee.model_version_tag("epochs", epochs)
-        arcee.stage("Calculation")
+        kiro.model_version_tag("epochs", epochs)
+        kiro.stage("Calculation")
         for e in range(epochs):
             epoch = e + 1
-            arcee.milestone("Entering epoch %d" % epoch)
+            kiro.milestone("Entering epoch %d" % epoch)
             print(f"+Epoch {epoch}\n-------------------------------")
             train(train_dataloader, model, loss_fn, optimizer, epoch)
             test(test_dataloader, model, loss_fn)
-        arcee.milestone("Finish training")
+        kiro.milestone("Finish training")
         print("+Task Done!")
-        arcee.milestone("Saving model")
+        kiro.milestone("Saving model")
         torch.save(model.state_dict(), filename)
-        arcee.artifact(filename, 'Model state', tags={'epochs': epochs})
+        kiro.artifact(filename, 'Model state', tags={'epochs': epochs})
         print(f"+Saved PyTorch Model State to {filename}")

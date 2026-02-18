@@ -4,17 +4,17 @@ import torch.optim as optim
 from torchvision import datasets, transforms
 from torch.utils.data import DataLoader
 
-import kiroframe_arcee as arcee
+import kiroframe_arcee as kiro
 
 
 def main():
-    # init arcee
-    with arcee.init(
+    # init kiro
+    with kiro.init(
         "YOU-PROFILING_TOKEN",
         task_key="test_task",
     ):
-        arcee.tag("project", "nnt_model demo")
-        arcee.tag("model_type", "trivial")
+        kiro.tag("project", "nnt_model demo")
+        kiro.tag("model_type", "trivial")
 
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -36,11 +36,11 @@ def main():
         )
 
         print("Downloading datasets..")
-        arcee.milestone("Download train data")
+        kiro.milestone("Download train data")
         train_dataset = datasets.MNIST(
             root="data", train=True, transform=transform, download=True
         )
-        arcee.milestone("Download test data")
+        kiro.milestone("Download test data")
         test_dataset = datasets.MNIST(
             root="data", train=False, transform=transform, download=True
         )
@@ -75,7 +75,7 @@ def main():
 
         # Training
         print("Training..")
-        arcee.milestone("train")
+        kiro.milestone("train")
         for epoch in range(num_epochs):
             model.train()
             total_loss = 0
@@ -100,10 +100,10 @@ def main():
             train_acc = 100 * correct / total
             avg_loss = total_loss / len(train_loader)
 
-            arcee.send({"accuracy": train_acc,
-                        "loss": avg_loss, "epoch": epoch + 1})
-            arcee.send({"loss": f"{avg_loss:.2f}%"})
-            arcee.send({"epoch": f"[{epoch + 1}/{num_epochs}]"})
+            kiro.send({"accuracy": train_acc,
+                       "loss": avg_loss, "epoch": epoch + 1})
+            kiro.send({"loss": f"{avg_loss:.2f}%"})
+            kiro.send({"epoch": f"[{epoch + 1}/{num_epochs}]"})
             print(
                 f"Epoch [{epoch + 1}/{num_epochs}], "
                 f"Loss: {avg_loss:.4f}, Accuracy: {train_acc:.2f}%"
@@ -111,7 +111,7 @@ def main():
 
         # Testing
         print("Testing..")
-        arcee.milestone("test")
+        kiro.milestone("test")
         model.eval()
         with torch.no_grad():
             correct = 0
@@ -122,7 +122,7 @@ def main():
                 _, predicted = torch.max(outputs.data, 1)
                 total += labels.size(0)
                 correct += (predicted == labels).sum().item()
-            arcee.send({"test_accuracy": 100 * correct / total})
+            kiro.send({"test_accuracy": 100 * correct / total})
             print(f"Test Accuracy: {100 * correct / total:.2f}%")
 
 

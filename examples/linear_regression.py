@@ -3,18 +3,18 @@ from __future__ import absolute_import, division, print_function
 import tensorflow as tf
 import numpy as np
 
-import kiroframe_arcee as arcee
+import kiroframe_arcee as kiro
 
 STATS_FILENAME = 'stats.csv'
 
-# init arcee
-arcee.init(token="test", task_key="linear_regression")
+# init kiro
+kiro.init(token="test", task_key="linear_regression")
 
-arcee.model("linear_regression")
+kiro.model("linear_regression")
 
-arcee.tag("project", "regression")
+kiro.tag("project", "regression")
 
-arcee.milestone("preparing data")
+kiro.milestone("preparing data")
 
 rng = np.random
 
@@ -89,7 +89,7 @@ def run_optimization():
     optimizer.apply_gradients(zip(gradients, [W, b]))
 
 
-arcee.milestone("calculation")
+kiro.milestone("calculation")
 stats = []
 for step in range(1, training_steps + 1):
     run_optimization()
@@ -98,7 +98,7 @@ for step in range(1, training_steps + 1):
         pred = linear_regression(X)
         loss = mean_square(pred, Y)
         # send model stats
-        arcee.send({"step": step, "loss": float(loss)})
+        kiro.send({"step": step, "loss": float(loss)})
         print(
             "step: %i, loss: %f, W: %f, b: %f"
             % (step, loss, W.numpy(), b.numpy())
@@ -107,19 +107,19 @@ for step in range(1, training_steps + 1):
                                                 float(W.numpy()),
                                                 float(b.numpy())])))
 
-arcee.milestone("calc done")
-arcee.model_version_alias("champion")
+kiro.milestone("calc done")
+kiro.model_version_alias("champion")
 
 try:
     with open(STATS_FILENAME, 'w') as file:
         for line in stats:
             file.write(line + '\n')
-        arcee.artifact(
+        kiro.artifact(
             STATS_FILENAME,
             'Run stats',
             tags={'training_steps': training_steps}
         )
-    arcee.finish()
+    kiro.finish()
 except Exception as exc:
     print("Error: %s" % str(exc))
-    arcee.error()
+    kiro.error()
