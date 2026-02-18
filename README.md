@@ -1,12 +1,12 @@
-# kiroframe_arcee
+# Kiroframe_arcee
 ## *The Kiroframe ML profiling tool by Hystax*
 
-`kiroframe_arcee` is a tool that helps you to integrate ML tasks with [Kiroframe](https://my.kiroframe.com/).
+Kiroframe_arcee (short name - Kiro) is a tool that helps you to integrate ML tasks with [Kiroframe](https://my.kiroframe.com/).
 This tool can automatically collect executor metadata from the cloud and process stats.
 
 ## Installation
-`kiroframe_arcee` requires Python 3.8+ to run.
-To install the `kiroframe_arcee` package, use pip:
+Kiroframe_arcee requires Python 3.8+ to run.
+To start, install the `kiroframe_arcee` package, use pip:
 ```sh
 pip install kiroframe-arcee
 ```
@@ -18,11 +18,11 @@ import kiroframe_arcee as kiro
 ```
 
 ## Initialization
-To initialize the kiroframe_arcee collector use the `init` method with the following parameters:
+To initialize the Kiro collector use the `init` method with the following parameters:
 - token (str, required): the profiling token.
 - task_key (str, required): the task key for which you want to collect data.
 - run_name (str, optional): the run name.
-- period (int, optional): kiroframe_arcee daemon process heartbeat period in seconds (default is 1).
+- period (int, optional): Kiro daemon process heartbeat period in seconds (default is 1).
 
 To initialize the collector using a context manager, use the following code snippet:
 ```sh
@@ -40,10 +40,10 @@ with kiro.init("00000000-0000-0000-0000-000000000000", "linear_regression",
     # some code
 ```
 
-This method automatically handles error catching and terminates kiroframe_arcee execution.
+This method automatically handles error catching and terminates Kiro execution.
 
 Alternatively, to get more control over error catching and execution finishing, you can initialize the collector using a corresponding method.
-Note that this method will require you to manually handle errors or terminate kiroframe_arcee execution using the `error` and `finish` methods.
+Note that this method will require you to manually handle errors or terminate Kiro execution using the `error` and `finish` methods.
 ```sh
 kiro.init(token="YOUR-PROFILING-TOKEN", task_key="YOUR-TASK-KEY")
 # some code
