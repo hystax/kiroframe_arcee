@@ -246,6 +246,19 @@ def use_dataset(dataset: str, comment: str = None) -> Dataset:
     return dataset
 
 
+def use_model(model: str, comment: str = None):
+    """
+    Use model (creates usage record, returns model dict)
+    Args:
+        model: the model indentifier in model_key:version format
+        comment: the usage comment
+    Returns:
+    """
+    arcee = Arcee()
+    asyncio.run(arcee.sender.use_model(
+        arcee.token, arcee.run, model, comment=comment))
+
+
 def _send_console():
     arcee = Arcee()
     try:
