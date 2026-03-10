@@ -249,7 +249,12 @@ Parameters:
 - comment (str, optional): the usage comment.
 ```sh
 model = kiro.use_model(
-    model='YOUR-MODEL-KEY:YOUR-MODEL-VERSION-OR-ALIAS')
+    model='YOUR-MODEL-KEY:YOUR-MODEL-VERSION')
+```
+or use alias
+```sh
+model = kiro.use_model(
+    model='YOUR-MODEL-KEY::YOUR-MODEL-ALIAS')
 ```
 
 ## Creating artifacts
