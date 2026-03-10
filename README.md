@@ -242,6 +242,21 @@ Example:
 kiro.model_version_tag("env", "staging demo")
 ```
 
+### Using model version
+To use a model, use the `use_model` method with model `key:version`. 
+Parameters:
+- model (str, required): the model identifier in key:version format.
+- comment (str, optional): the usage comment.
+```sh
+model = kiro.use_model(
+    model='YOUR-MODEL-KEY:YOUR-MODEL-VERSION')
+```
+or use alias
+```sh
+model = kiro.use_model(
+    model='YOUR-MODEL-KEY::YOUR-MODEL-ALIAS')
+```
+
 ## Creating artifacts
 To create an artifact, use the `artifact` method with the following parameters:
 - path (str, required): the run artifact path.

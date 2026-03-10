@@ -243,3 +243,10 @@ class Sender:
         return await self.send_patch_request(
             uri, headers, {"meta": meta}
         )
+
+    @check_shutdown_flag_set
+    async def use_model(self, token, run_id, model: str, comment=None):
+        uri = f"{self.endpoint_url}/run/{run_id}/model_use"
+        headers = {"x-api-key": token, "Content-Type": "application/json"}
+        return await self.send_post_request(
+            uri, headers, {"model": model, "comment": comment})
